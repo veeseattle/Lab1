@@ -112,8 +112,8 @@ namespace ImageProcessing
         public virtual void setPixel(int x, int y, short red, short green, short blue)
         {
             this.pixels[x, y, 0] = red;
-
-            // Your solution here.
+            this.pixels[x, y, 1] = green;
+            this.pixels[x, y, 2] = blue;
         }
 
         /// <summary>
