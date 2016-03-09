@@ -127,7 +127,24 @@ namespace ImageProcessing
         public override string ToString()
         {
             // Replace the following line with your solution.
-            return "";
+            StringBuilder sb = new StringBuilder();
+            //string[] colorsAtColumnY = new string[pixels.GetLength(1) - 1];
+            
+            for (int i = 0; i < this.Width; i++)
+            {
+                for (int j = 0; j < this.Height; j++)
+                {
+                    if(j > 0)
+                    {
+                        sb.Append(",");
+                    }
+                    sb.Append(string.Format("({0},{1},{2})", this.getRed(i, j), this.getGreen(i, j), this.getBlue(i, j)));
+                    //short[] colorsAtPixel = { pixels[i, j, 0], pixels[i, j, 1], pixels[i, j, 2] };
+                    //colorsAtColumnY[j] = String.Format("{0,0,0}", colorsAtPixel);
+                }
+                sb.Append(Environment.NewLine);
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -359,6 +376,7 @@ namespace ImageProcessing
         new int[] {122, 143, 74},
         new int[] {74, 143, 122}
             })), "Incorrect Sobel:\n" + image2.sobelEdges());
+            Console.ReadLine();
         }
 
     }
