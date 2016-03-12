@@ -29,6 +29,7 @@ namespace ImageProcessing
         /// </summary>
         private short[,,] pixels;
 
+
         /// <summary>
         /// PixImage() constructs an empty PixImage with a specified width and height.
         /// Every pixel has red, green, and blue intensities of zero (solid black).
@@ -128,7 +129,6 @@ namespace ImageProcessing
         {
             // Replace the following line with your solution.
             StringBuilder sb = new StringBuilder();
-            //string[] colorsAtColumnY = new string[pixels.GetLength(1) - 1];
 
             for (int i = 0; i < this.Width; i++)
             {
@@ -139,8 +139,6 @@ namespace ImageProcessing
                         sb.Append(",");
                     }
                     sb.Append(string.Format("({0},{1},{2})", this.getRed(i, j), this.getGreen(i, j), this.getBlue(i, j)));
-                    //short[] colorsAtPixel = { pixels[i, j, 0], pixels[i, j, 1], pixels[i, j, 2] };
-                    //colorsAtColumnY[j] = String.Format("{0,0,0}", colorsAtPixel);
                 }
                 sb.Append(Environment.NewLine);
             }
@@ -175,7 +173,7 @@ namespace ImageProcessing
         /// </summary>
         /// <param name="numIterations"> the number of iterations of box blurring. </param>
         /// <returns> a blurred version of "this" PixImage. </returns>
-        public virtual PixImage boxBlur(int numIterations)
+        public virtual PixImage BoxBlur(int numIterations)
         {
             if (numIterations > 0)
             {
@@ -210,7 +208,7 @@ namespace ImageProcessing
                 }
                 for (int n = 0; n < numIterations; n++)
                 {
-                    newImage = newImage.boxBlur(n);
+                    newImage = newImage.BoxBlur(n);
                 }
                 return newImage;
             }
@@ -259,18 +257,20 @@ namespace ImageProcessing
         /// </summary>
         /// <returns> a grayscale PixImage representing the edges of the input image.
         /// Whiter pixels represent stronger edges. </returns>
-        public virtual PixImage sobelEdges()
+        public virtual PixImage SobelEdges()
         {
             var newImage = new PixImage(this.Width, this.Height);
-            int[,] xVector =
+            //constant, Sobel operator
+            int[,] xSobelOperator =
             {
-                {1, 0, -1 },
-                {2, 0, -2 },
-                {1, 0, -1 }
+                { 1, 0, -1 },
+                { 2, 0, -2 },
+                { 1, 0, -1 }
             };
 
-            int[,] yVector =
-            {
+            //constant, Sobel operator
+            int[,] ySobelOperator =
+                {
                 {1, 2, 1 },
                 {0, 0, 0 },
                 {-1, -2, -1 }
@@ -279,14 +279,19 @@ namespace ImageProcessing
             int[] gx, gy;
             long[,] energy = new long[Width, Height];
 
+            //get reflection so every pixel within the original image has 9 neighbors (incl itself)
             var newImageWithReflection = this.GetReflection();
+            //traverse each pixel within original image and calculate dot product
             for (int i = 0; i < Width; i++)
             {
                 for (int j = 0; j < Height; j++)
                 {
+                    //get subimage for each pixel (from newImageWithReflection)
                     var image = newImageWithReflection.GetSubImage(i, j, 3, 3);
-                    gx = image.DotProduct(xVector);
-                    gy = image.DotProduct(yVector);
+
+                    //calculate dot product with x and y sobel operators
+                    gx = image.DotProduct(xSobelOperator);
+                    gy = image.DotProduct(ySobelOperator);
 
                     //calculate energy values 
                     energy[i, j] = (gx[0] * gx[0]) + (gy[0] * gy[0]) + (gx[1] * gx[1]) + (gy[1] * gy[1]) + (gx[2] * gx[2]) + (gy[2] * gy[2]);
@@ -300,10 +305,10 @@ namespace ImageProcessing
         //so that each pixel in the original image has 9 neighbors (including itself)
         private PixImage GetReflection()
         {
-            var newMatrix = new PixImage(Width+2, Height+2);
-            for (int x = 1; x<newMatrix.Width - 1; x++)
+            var newMatrix = new PixImage(Width + 2, Height + 2);
+            for (int x = 1; x < newMatrix.Width - 1; x++)
             {
-                for(int y = 1; y<newMatrix.Height - 1; y++)
+                for (int y = 1; y < newMatrix.Height - 1; y++)
                 {
                     newMatrix.setPixel(x, y, this.getRed(x - 1, y - 1), this.getGreen(x - 1, y - 1), this.getBlue(x - 1, y - 1));
                 }
@@ -311,7 +316,7 @@ namespace ImageProcessing
 
             for (int x = 0; x < newMatrix.Width; x++)
             {
-               for (int y = 0; y < newMatrix.Height; y++)
+                for (int y = 0; y < newMatrix.Height; y++)
                 {
                     int a = x;
                     int b = y;
@@ -319,10 +324,10 @@ namespace ImageProcessing
 
                     if (x == 0) { a = 1; }
                     if (y == 0) { b = 1; }
-                    if (x == newMatrix.Width-1) { a = newMatrix.Width - 2; }
-                    if (y == newMatrix.Height-1) { b = newMatrix.Height - 2; }
+                    if (x == newMatrix.Width - 1) { a = newMatrix.Width - 2; }
+                    if (y == newMatrix.Height - 1) { b = newMatrix.Height - 2; }
                     red = (short)newMatrix.getRed(a, b);
-                               
+
                     //Console.WriteLine("getting a: {0}, b: {1}, for x: {2}, y: {3} which is: {4}", a,  b, x, y, red);
                     newMatrix.setPixel(x, y, red, red, red);
                 }
@@ -330,13 +335,13 @@ namespace ImageProcessing
             //Console.WriteLine(newMatrix);
             return newMatrix;
         }
-        
+
         private PixImage GetSubImage(int x, int y, int width, int height)
         {
             PixImage newImage = new PixImage(width, height);
-            for(int i=x; i<x+width; i++)
+            for (int i = x; i < x + width; i++)
             {
-                for(int j=y; j<y+height; j++)
+                for (int j = y; j < y + height; j++)
                 {
                     newImage.setPixel(i - x, j - y, this.getRed(i, j), this.getGreen(i, j), this.getBlue(i, j));
                 }
@@ -347,18 +352,18 @@ namespace ImageProcessing
         private int[] DotProduct(int[,] matrix)
         {
             int[] products = new int[3] { 0, 0, 0 };
-            for(int i=0; i<this.Width; i++)
+            for (int i = 0; i < this.Width; i++)
             {
-                for(int j=0; j<this.Height; j++)
+                for (int j = 0; j < this.Height; j++)
                 {
-                    products[0] += (this.getRed(i, j) * matrix[i,j]);
+                    products[0] += (this.getRed(i, j) * matrix[i, j]);
                     products[1] += (this.getGreen(i, j) * matrix[i, j]);
                     products[2] += (this.getBlue(i, j) * matrix[i, j]);
                 }
             }
             return products;
         }
-        
+
 
         /// <summary>
         /// TEST CODE:  YOU DO NOT NEED TO FILL IN ANY METHODS BELOW THIS POINT.
@@ -460,51 +465,50 @@ namespace ImageProcessing
             doTest(image1.Width == 3 && image1.Height == 3, "Incorrect image width and height.");
 
             Console.WriteLine("Testing blurring on a 3x3 image.");
-            doTest(image1.boxBlur(1).Equals(array2PixImage(new int[][]
+            doTest(image1.BoxBlur(1).Equals(array2PixImage(new int[][]
             {
         new int[] {40, 108, 155},
         new int[] {81, 137, 187},
         new int[] {120, 164, 218}
-            })), "Incorrect box blur (1 rep):\n" + image1.boxBlur(1));
-            doTest(image1.boxBlur(2).Equals(array2PixImage(new int[][]
+            })), "Incorrect box blur (1 rep):\n" + image1.BoxBlur(1));
+            doTest(image1.BoxBlur(2).Equals(array2PixImage(new int[][]
             {
             new int[] {91, 118, 146},
             new int[] {108, 134, 161},
             new int[] {125, 151, 176}
-            })), "Incorrect box blur (2 rep):\n" + image1.boxBlur(2));
-            doTest(image1.boxBlur(2).Equals(image1.boxBlur(1).boxBlur(1)), "Incorrect box blur (1 rep + 1 rep):\n" + image1.boxBlur(2) + image1.boxBlur(1).boxBlur(1));
+            })), "Incorrect box blur (2 rep):\n" + image1.BoxBlur(2));
+            doTest(image1.BoxBlur(2).Equals(image1.BoxBlur(1).BoxBlur(1)), "Incorrect box blur (1 rep + 1 rep):\n" + image1.BoxBlur(2) + image1.BoxBlur(1).BoxBlur(1));
 
             Console.WriteLine("Testing edge detection on a 3x3 image.");
-            doTest(image1.sobelEdges().Equals(array2PixImage(new int[][]
+            doTest(image1.SobelEdges().Equals(array2PixImage(new int[][]
             {
             new int[] {104, 189, 180},
             new int[] {160, 193, 157},
             new int[] {166, 178, 96}
-            })), "Incorrect Sobel:\n" + image1.sobelEdges());
+            })), "Incorrect Sobel:\n" + image1.SobelEdges());
 
+            PixImage image2 = array2PixImage(new int[][]
+            {
+            new int[] {0, 100, 100},
+            new int[] {0, 0, 100}
+            });
+            Console.WriteLine("Testing getWidth/getHeight on a 2x3 image.  " + "Input image:");
+            Console.Write(image2);
+            doTest(image2.Width == 2 && image2.Height == 3, "Incorrect image width and height.");
 
-            //    PixImage image2 = array2PixImage(new int[][]
-            //    {
-            //new int[] {0, 100, 100},
-            //new int[] {0, 0, 100}
-            //    });
-            //    Console.WriteLine("Testing getWidth/getHeight on a 2x3 image.  " + "Input image:");
-            //    Console.Write(image2);
-            //    doTest(image2.Width == 2 && image2.Height == 3, "Incorrect image width and height.");
+            Console.WriteLine("Testing blurring on a 2x3 image.");
+            doTest(image2.BoxBlur(1).Equals(array2PixImage(new int[][]
+            {
+            new int[] {25, 50, 75},
+            new int[] {25, 50, 75}
+            })), "Incorrect box blur (1 rep):\n" + image2.BoxBlur(1));
 
-            //    Console.WriteLine("Testing blurring on a 2x3 image.");
-            //    doTest(image2.boxBlur(1).Equals(array2PixImage(new int[][]
-            //    {
-            //new int[] {25, 50, 75},
-            //new int[] {25, 50, 75}
-            //    })), "Incorrect box blur (1 rep):\n" + image2.boxBlur(1));
-
-            //    Console.WriteLine("Testing edge detection on a 2x3 image.");
-            //    doTest(image2.sobelEdges().Equals(array2PixImage(new int[][]
-            //    {
-            //new int[] {122, 143, 74},
-            //new int[] {74, 143, 122}
-            //    })), "Incorrect Sobel:\n" + image2.sobelEdges());
+            Console.WriteLine("Testing edge detection on a 2x3 image.");
+            doTest(image2.SobelEdges().Equals(array2PixImage(new int[][]
+            {
+            new int[] {122, 143, 74},
+            new int[] {74, 143, 122}
+            })), "Incorrect Sobel:\n" + image2.SobelEdges());
             Console.ReadLine();
         }
 
