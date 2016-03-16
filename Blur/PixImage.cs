@@ -182,27 +182,9 @@ namespace ImageProcessing
                 for (int i = 0; i < this.Width; i++)
                 {
                     for (int j = 0; j < this.Height; j++)
-                    {
-                        short red = 0, green = 0, blue = 0;
-                        int counter = 0;
-                        //for every pixel, visit its neighbor too 
-                        for (int x = i - 1; x <= i + 1; x++)
-                        {
-                            for (int y = j - 1; y <= j + 1; y++)
-                            {
-                                if (x >= 0 && x < this.Width && y >= 0 && y < this.Height)
-                                {
-                                    red += (short)getRed(x, y);
-                                    green += (short)getGreen(x, y);
-                                    blue += (short)getBlue(x, y);
-                                    counter++;
-                                }
-                            }
-                        }
-                        red = (short)(red / counter);
-                        green = (short)(green / counter);
-                        blue = (short)(blue / counter);
-                        newImage.setPixel(i, j, red, green, blue);
+                    {   
+                        Pixel newPixel = this.GetBlurredPixel(i, j);
+                        newImage.setPixel(i, j, newPixel.Red, newPixel.Green, newPixel.Blue);
                         // Console.WriteLine("At pixel {0},{1}: {2}, {3}, {4}. Counter: {5}", i, j, red, green, blue, counter);
                     }
                 }
@@ -213,6 +195,40 @@ namespace ImageProcessing
                 return newImage;
             }
             return this;
+        }
+        
+        public class Pixel
+        {
+            public short Red {get; set;}
+            public short Green {get; set;}
+            public short Blue {get; set;}
+        }
+        
+        public virtual Pixel GetBlurredPixel(short i, short j)
+        {
+            short red = 0, green = 0, blue = 0;
+            int counter = 0;
+            //for every pixel, visit its neighbor too 
+            for (int x = i - 1; x <= i + 1; x++)
+            {
+                for (int y = j - 1; y <= j + 1; y++)
+                {
+                    if (x >= 0 && x < this.Width && y >= 0 && y < this.Height)
+                    {
+                        red += (short)getRed(x, y);
+                        green += (short)getGreen(x, y);
+                        blue += (short)getBlue(x, y);
+                        counter++;
+                    }
+                }
+            }
+            
+            return new Pixel()
+            {
+                Red = (short)(red / counter),
+                Green = (short)(green / counter),
+                Blue = (short)(blue / counter)
+            };
         }
 
         /// <summary>
